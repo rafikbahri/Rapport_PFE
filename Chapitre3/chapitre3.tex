@@ -1,0 +1,336 @@
+
+\setcounter{chapter}{2}
+\chapter{Bench Tests Pipeline}
+\minitoc %insert la minitoc
+\graphicspath{{Chapitre3/figures/}}
+
+%\DoPToC
+%==============================================================================
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[R]{\bfseries\rightmark}
+\fancyfoot[R]{\thepage}
+\renewcommand{\headrulewidth}{0.5pt}
+\renewcommand{\footrulewidth}{0pt}
+\renewcommand{\chaptermark}[1]{\markboth{\MakeUppercase{\chaptername~\thechapter. #1 }}{}}
+\renewcommand{\sectionmark}[1]{\markright{\thechapter.\thesection~ #1}}
+
+\begin{spacing}{1.2}
+
+%==============================================================================
+\section*{Introduction}
+Dans ce chapitre, nous allons présenter le cycle développement de la solution "Bench Tests pipeline". Nous commencerons par la phase d’analyse et identification des besoins, nous expliquerons ensuite les choix architecturaux et technologiques, et achèverons par la réalisation du projet.  
+\section{Analyse et spécification des besoins}
+\subsection{Benchmark Tests}
+Le test de performance est un type de test au cours duquel on mesure les performances de l'application soumise à une charge d'utilisateurs. Les informations recueillies concernent les temps de réponse utilisateurs, les temps de réponse réseau, les temps de traitement d’une requête sur le serveur et des informations sur les données transférées et le débit.
+\subsection{Identification des acteurs}
+Nos acteurs principaux sont les membres de l'équipe QA, à savoir : 
+\begin{itemize}
+    \setlength\itemsep{0em}
+    \item[--] \textbf{Le Release Manager} : C'est le responsable de la livraison de Shuttle et ses différents composants. Il s'intéresse aux résultats des tests de performance, synthétisés avec des KPIs pertinents.
+    \item[--] \textbf{L'ingénieur QA} : Il assure la qualité du produit, et signale toute dégradation en performances ou autres anomalies.
+    \item[--] \textbf{Le testeur} : Il développe le scénario de tests de performances, le déploie et assure le bon déroulement du test. 
+\end{itemize}
+\subsection{Spécification des besoins fonctionnels}
+Nous présentons la Figure III.1 pour mettre en clair les cas d'utilisation du pipeline. 
+\begin{figure}[!ht]\centering
+\includegraphics[scale=0.5]{"use-case-bench-pipeline".png}
+\caption{Digramme de cas d'utilisation - Bench Tests Pipeline}
+\label{fig:fig1}
+\end{figure}
+\FloatBarrier
+Nous décrivons les cas d'utilisation comme suit : 
+\begin{itemize}
+    \setlength\itemsep{0em}
+    \item[--] \textbf{Lancer le Pipeline} : décrit par une description textuelle, Tableau III.1. 
+    \item[--] \textbf{Installer la dernière version Shuttle} : En extension au cas d'utilisation "Lancer le Pipeline", l'utilisateur doit pouvoir choisir d'installer la dernière version du serveur Shuttle. 
+    \item[--] \textbf{Consulter les résultats} : Après avoir connecté à l'outil de reporting, un utilisateur doit pouvoir consulter les résultats du test de benchmark. Il doit également être capable de faire des recherches, des tries, et autres requêtes sur les résultats.
+    \item[--] \textbf{Générer des rapports PDF} : L'utilisateur doit avoir l'option de génération de résultats et graphiques en format PDF afin de les archiver ou les envoyer via E-mail.
+    \item[--] \textbf{Gérer les dashboards de reporting} : L'ingénieur QA doit être capable d'ajouter, supprimer ou modifier les graphiques et les dashboards sur l'outil de reporting.
+    \item[--] \textbf{Gérer l'historique des résultats} : L'ingénieur QA doit être capable d'archiver, télécharger où supprimer les résultats des benchs.
+    \item[--] \textbf{Mettre à jour le scenario} : Le pipeline doit offrir la possibilité de mettre à jour facilement le scénario de test de performance.
+\end{itemize}
+La description textuelle suivante explique le cas d'utilisation commun entre les acteurs : "Lancer le pipeline".
+\begin{table}[ht]
+	\centering
+	\caption{Description textuelle du cas d’utilisation "Lancer le pipeline"}
+	\footnotesize
+	\begin{tabularx}{\textwidth}{|p{3.3cm}|X|}
+          \hline
+          {\textbf{Acteur}}
+          & 
+          Membre de l'équipe QA
+          \\
+          \hline
+          {\textbf{Événement déclencheur}}
+          & 
+         Demande de lancement de test de performance.
+          \\
+          \hline
+          {\textbf{Parties prenantes et intérêts}}
+          & 
+          Les acteurs peuvent lancer le pipeline pour mettre à jour l'environnement, récupérer les dernières modifications effectuées sur le scénario de test, lancer les tests et envoyer des notifications à la fin de l'exécution.
+          \\
+          \hline
+          {\textbf{Préconditions}}
+          & 
+          Authentification et disponibilité de l'environnement Cloud de test.
+          \\
+          \hline
+          {\textbf{Postconditions}}
+          & 
+          Les tests sont exécutés et les résultats sont disponibles dans l'outil de reporting.
+          \\
+          \hline
+          {\textbf{Scénario nominal}}
+          & 
+          \vspace{-3mm}
+          \begin{enumerate}
+          \setlength\itemsep{0em}
+              \item Lancer le pipeline.
+              \item Se connecter à l'outil de reporting.
+              \item Visualiser les résultats.
+          \end{enumerate}
+          \\
+          \hline
+          {\textbf{Les extensions}}
+          &  
+          Choisir de mettre à jour la version du serveur Shuttle.
+          \\
+          \hline
+        \end{tabularx}
+	\label{tab:exple}
+\end{table}
+\FloatBarrier
+Outre que les besoins fonctionnels, le pipeline doit satisfaire un certain nombre de besoins techniques et non fonctionnels.
+\subsection{Spécifications des besoins techniques et non fonctionnels}
+Nous avons extrait les besoins techniques et non fonctionnels les plus pertinents, nous citons : 
+\begin{itemize}
+    \setlength\itemsep{0em}
+    \item[--] \textbf{Performance} : Concevoir le pipeline d'une manière optimisée avec la parallélisation des jobs.
+    \item[--] \textbf{Extensibilité et maintenabilité} : Permettre la modification du pipeline, la suppression et le rajout de nouveaux stages. 
+    \item[--] \textbf{Scalabilité} : Doit assurer la monté en charge de serveur Shuttle lors de l'exécution de test de performance.
+    \item[--] \textbf{Infrastructure reproductible} :
+    Nous devons pouvoir reproduire l'infrastructure du pipeline très rapidement lorsqu'on a besoin, par exemple : la duplication du pipeline mais sur une autre nouvelle infrastructure. 
+    \item[--] \textbf{Sécurité et droits d’accès} : La restriction sur certaines actions dans le pipeline et la gestion des droits d'accès aux dashboards de reporting.
+\end{itemize}
+Après avoir vu les différents besoins à satisfaire, nous allons passer à la conception et architecture de notre projet.
+\section{Conception et architecture}
+\subsection{Conception et choix technologiques}
+\subsubsection{Conception}
+Pour réussir la conception d'une chaine automatique, il faut bien réfléchir aux différents chemins possibles et en choisir le plus court. Un pipeline, suivant l'implémentation Pipeline as Code, supporte la parallélisation des stages et steps. La figure III.2 présente la conception du pipeline.
+\begin{figure}[!ht]\centering
+\includegraphics[scale=0.36]{"bench-pipeline-conception".png}
+\caption{Conception Bench Tests Pipeline}
+\label{fig:fig2}
+\end{figure}
+\FloatBarrier
+Nous détaillons les différents stages du pipeline : 
+\begin{itemize}
+    \setlength\itemsep{0em}
+    \item[--] \textbf{Bench-Test-Pipeline} : C'est l'ensemble des différents stages.
+    \item[--] \textbf{Pull Test Tool Project} : L'outil de test est basé sur un code source Docker que nous avons adapté à notre besoin. Ce stage permet la mise à jour du projet. 
+    \item[--] \textbf{Update Shuttle Test Config} : Dans ce stage, nous mettons à jour la configuration Shuttle dédiée au Bench Test : le scénario de test et la configuration de l'environnement cloud.  
+    \item[--] \textbf{Build Test Tool Docker Image} : Permet la construction de l'image Docker de l'outil de test.
+    \item[--] \textbf{Deploy new Shuttle Cloud Env} : Ce stage assure le déploiement de l'environnement Shuttle avec sa base de données, son utilitaire de log Tailon, et la plateforme OwnCloud permettant l'accès au système de fichiers Shuttle.
+    \item[--] \textbf{Run Test Samples} : Lance le conteneur Docker de l'outil de test, afin d'exécuter le scénario de bench et attaquer le serveur Shuttle.
+\end{itemize}
+En se basant sur l'analyse des besoins et la conception du projet, nous allons nous concentrer les choix technologiques. 
+\subsubsection{Choix technologiques}
+Pour l'automatisation du pipeline et l'orchestration des conteneurs Docker, nous allons utiliser les outils que nous avons choisis dans le Chapitre II : Jenkins comme serveur CI/CD et automatisation, et Rancher pour l'orchestration. Dans cette section, nous allons discuter les choix technologiques de : l'outil de test de performance, le reporting et le monitoring. 
+
+\textbf{a.  Outil de test de performance} : Nous avons effectué un état de l'art sur le sujet de Benchmark test. Notre liste d'outils  a été restrainte aux plateformes candidates suivantes : \textbf{Apache JMeter} et \textbf{Gatling}. \\
+Développé par la fondation Apache Software, JMeter est un projet opensource distribué sous la licence Apache permettant d'effectuer des tests de performance d'applications et de serveurs selon différents protocoles ainsi que des tests fonctionnels. \\
+D'autre part Gatling est un outil opensource de test de charge et de performance pour applications web. Gatling est distribué sous la licence Apache 2.0 et se considère parmi les outils leaders dans le domaine du test de performance.
+Les critères de choix entre ces deux logiciels sont décrits par le tableau III.2.
+\begin{table}[ht]
+	\centering
+	\caption{Tableau comparatif entre les outils de test de performance}
+	\footnotesize
+	\begin{tabularx}{\textwidth}{|X|X|X|}
+          \hline & {\textbf{Apache JMeter}} & {\textbf{Gatling}} \\
+          \hline
+          Virtualisation des utilisateurs  & Infinie & Infinie  \\
+          \hline
+          Test de charge distribué & Oui & Non  
+          \\
+          \hline
+          Mode UI & Oui & Seulement l'enregistrement des tests  \\
+          \hline
+          Scripting des scénarios de tests & XML & Scala \\
+          \hline 
+          Ligne de commande & Oui & Oui \\
+          \hline
+          Plugins & Oui & Oui \\
+          \hline
+          HTML Reports & Oui & Oui \\
+          \hline
+          Intégration avec les outils tiers & Jenkins, ES, InfluxDB, Grafana.. & Jenkins, Bamboo\\
+          \hline
+        \end{tabularx}
+	\label{tab:exple}
+\end{table} 
+\FloatBarrier
+Nous nous intéressons en plus aux protocoles de communication supportés par ces deux outils.
+\begin{itemize}
+    \setlength\itemsep{0em}
+    \item[--] \textbf{Apache JMeter} : L'outil est plutôt orienté performance des serveurs web et serveur d'applications, il supporte les protocoles web HTTP/HTTPS, les WebServeics SOAP et REST et autres protocoles.
+    \item[--] \textbf{Gatling} : C'est plutôt orienté performance des applications web. Il supporte le mode asynchrone et est largement utilisé pour tester les applications basées sur les protocoles de messaging MQTT et AMQP.
+\end{itemize}
+\vspace{-3mm}
+Étant donné que la plateforme Shuttle est écrite en Java, basée sur un serveur web Apache Tomcat et communiquant en SOAP,  nous avons choisi l'outil \textbf{Apache JMeter} pour ces critères, en plus des fonctionnalités offertes par ce dernier.
+
+\textbf{b. Reporting} : L'ancienne méthode de reporting s'agissait d'une synthèse des résultats de tests faite par l'ingénieur QA dans une feuille Excel. L'inconvénient de cette méthode qu'elle est manuelle et statique. De plus, l'investigation des résultats était très difficile et les indicateurs étaient limités. De ces faits, un outil de reporting dynamique offrant des indicateurs pertinent a été nécessaire. Après avoir effectué une étude sur les technologies disponibles  sur le marché, nous avons opté à la solution Elastic Stack, l'ancienne ELK \cite{elasticstack} qui est principalement composée des trois outils suivants :
+\vspace{0mm}
+\begin{itemize}
+    \setlength\itemsep{0em}
+     \item[\textbullet] ElasticSearch : Il représente la partie stockage et gestion de données dans la stack. Il utilise des bases de données NoSQL appelées index pour sauvegarder les données. Il offre un moteur de recherche et une API REST pour la manipulation des données. 
+    \item[\textbullet] Logstash : C'est la première brique de la stack qui assure la partie ETL. Il permet l'ingestion des données dans les index d'ElasticSearch. 
+    \item[\textbullet] Kibana : Assure la partie visualisation et gestion des données ElasticSearch. L'outil permet la création des dashboards, la gestion des visualisations et toute la partie sécurité et droits d'accès.  
+\end{itemize}
+Nous expliquons notre choix et le rôle de chaque outil de la stack Elastic par besoin.
+\begin{itemize}
+    \setlength\itemsep{0em}
+    \item[--] \textbf{Stockage des résultats} : Avec l'ancienne méthode de reporting, l'ingénieur QA enregistre les fichiers CSV issus de l'exécution de test dans son poste. Avec Logstash et ElasticSearch, nous allons pouvoir stocker les données de l'exécution du test dans des index, qu'on peut par la suite gérer facilement.
+    \item[--] \textbf{Manipulation des données} : L'ingénieur QA doit fusionner les fichiers CSV produisant un gros fichier pour effectuer ensuite des requêtes avec l'outil Excel. Avec ElasticSearch et Kibana, nous allons pouvoir effectuer facilement des requêtes complexes sur les bases de données à l'aide de la Query DSL d'ElasticSearch.
+    \item[--] \textbf{Visualisation et Reporting} :  L'équipe QA utilisait Excel pour visualiser les résultats sous forme d'un seul graphe. Nous allons utiliser Kibana pour la création et la gestion des dashboards et visualisations interactives et dynamiques.
+\end{itemize}
+La figure III.3 présente l'architecutre de la Elastic Stack.
+\begin{figure}[!ht]\centering
+\includegraphics[scale=0.30]{"elasticstack-architecture".png}
+\caption{Architecture Elastic Stack}
+\label{fig:fig2}
+\end{figure}
+\FloatBarrier
+\textbf{c. Monitoring} : 
+En plus du reporting, et pour assurer le bon déroulement du processus de test de benchmark, nous avons besoin    de surveiller le pipeline aux plusieurs niveaux.\\
+\textbf{Monitoring des serveurs} : Nous avons besoin d'une plateforme de monitoring offrant une vue de haut niveau mais aussi de bas niveau sur l'état de nos serveurs. Grafana était notre choix [Annexe ]. L'outil permet la création des graphes et dashboards analytiques sur les conteneurs et les stacks Docker, l'utilisation CPU, mémoires et disques des serveurs.\\
+\textbf{Monitoring de la JVM du serveur Shuttle} : Pour bien comprendre et investiguer les résultats des tests, nous avons besoin de surveiller la JVM du serveur Shuttle en bas niveau. Nous nous intéressons en plus des mertics haut niveau, aux appels entres les classes, les méthodes les plus utilisées et les packages prenant le plus de temps pendant le test. Pour cela, nous avons opté à l'utilisation du couple Java Flight Recorder[n'oublies pas l'annexe] pour la capture instantannée de l'état de la JVM et Java Mission Control[n'oublies pas l'annexe] pour la visualisation et l'exploration des résultats. \\
+Maintenant que notre périmètre technologique est défini, nous entamerons l'architecture technique.
+\subsection{Architecture technique}
+\subsubsection{Infrastructure}
+Nous présenterons au premier lieu l'infrastructure sous-jacente à notre pipeline permettant l'exécution du benchmark test.  
+\begin{figure}[!ht]\centering
+\includegraphics[scale=0.25]{"bench-pipeline-infra".png} 
+\caption{Infrastructure du Bench Tests Pipeline}
+\label{fig:fig4}
+\end{figure}
+\FloatBarrier
+Le serveur Master est l'orchestrateur du pipeline. Il envoie les jobs à exécuter au serveur Slave KCI-Slave1. Ce dernier lance l'outil de test JMeter avec la configuration mise à jour. La machine Bench-Worker1 déploie le serveur Shuttle et exécute les requêtes envoyées par JMeter. Qual-Worker1 héberge la plateforme Grafana pour le monitoring des serveurs et finalement Dev-Worker1 héberge la Elastic Stack pour le reporting. \\
+\subsubsection{Architecture} 
+Nous présenterons à l'aide de la figure III.5 l'architecture complète décrivant les différents stages de notre pipeline.
+\begin{figure}[!ht]\centering
+\rotatebox[origin=c]{-90}{\includegraphics[height=15cm,width=19cm]{"bench-tests-pipeline".png}}
+\caption{Architecture technique - Bench Tests Pipeline}
+\label{fig:fig5}
+\end{figure}
+\FloatBarrier
+Pour la partie monitoring de la JVM Shuttle, n'importe quelle machine contenant l'outil Java Mission Control et ayant les identifiants peut bénéficier de cette fonctionnalité. Typiquement, ce sont les développeurs et les testeurs qui veulent surveiller l'état de la JVM pendant le test. \\ 
+La figure III.6 présente l'architecture du Shuttle avec Java Flight Recorder JFR et Java Mission Control JMC. 
+\begin{figure}[!ht]\centering
+\includegraphics[scale=0.5]{"shuttle-jfr-jmc".png} 
+\caption{Architecture Shuttle - JFR - JMC}
+\label{fig:fig6}
+\end{figure}
+\FloatBarrier
+Tournant sur une machine virtuelle Java, le serveur Shuttle active la fonctionnalité JFR pour enregistrer en temps réel l'état de la JVM. L'outil JFR expose les metrics via le protocole JMX/RMI pour les clients JMC.
+\section{Réalisation}
+\subsection{Environnement de travail logiciel}
+\subsubsection{Environnement de travail matériel}
+Pour la réalisation de ce projet, nous avons travaillé sur notre poste possédant une mémoire de 16 Go, un disque dur de 500 Go en HDD, un deuxième de 500 Go en SDD et un processeur Intel Core TM i7. Nous avons également travaillé sur des serveurs Linux qui constituent l'infrastructure de notre solution. 
+\subsubsection{Environnement de travail logiciel}
+L'environnement de travail logiciel utilisé pendant ce projet est composé de :
+\begin{itemize}
+    \setlength\itemsep{0em}
+    \item[--] \textbf{IntelliJ IDEA} : Intégrant la Groovy DSL qui permet le développement des pipelines Jenkins et des images Docker, IntelliJ IDEA était notre IDE principal. 
+    \item[--] \textbf{Bitbucket} : Nous avons intégré un serveur Bitbucket sur le réseau interne de l’entreprise. La solution Git collaborative d'Atlassian nous permet la gestion du code source et des fichiers de configuration.
+    \item[--] \textbf{Microsoft Teams} : Notre plateforme de chat interne. 
+    \item[--] \textbf{draw.io} : C'est un designer que nous avons utilisé pour le prototypage et la conception de notre solution. 
+    \item[--] \textbf{Confluence} : La plateforme de notre documentation R\&D interne.
+    \item[--] \textbf{Portus} : Notre registry Docker. Nous avons sauvgardé toutes nos images Docker sur cette plateforme.
+    \item[--] \textbf{Navigateur web} : Google Chrome.
+    \item[--] \textbf{Xmind} : Un outil de mind mapping. 
+\end{itemize}
+\subsection{Scénario d’utilisation}
+L'utilisateur de notre solution commence d'abord par se connecter à Jenkins et lancer le pipeline.
+\begin{figure}[!ht]\centering
+\includegraphics[height=6cm,width=18cm]{"bench-pipeline-capture".png} 
+\caption{Exemple d'exécution du Bench Tests Pipeline}
+\label{fig:fig7}
+\end{figure}
+\FloatBarrier
+Ainsi, un nouvel environnement cloud est déployé sur Rancher et un serveur Shuttle est prêt à recevoir les requêtes [annexe ici].
+\begin{figure}[!ht]\centering
+\includegraphics[height=6cm,width=18cm]{"shuttle-env-rancher".png}
+\caption{Déploiement de l'environnement cloud sur Rancher}
+\label{fig:fig8}
+\end{figure}
+\FloatBarrier
+Une fois lancé, JMeter envoie en temps réel la réponse de chaque requête de test à la stack Elastic. La figure III.9 montre le dashboard de test de bench.
+\begin{figure}[!ht]\centering
+\includegraphics[scale=0.42]{"elastic-bench-run1".png}
+\caption{Dashboard Kibana du Bench Test}
+\label{fig:fig9}
+\end{figure}
+\FloatBarrier
+Nous avons aussi créé un dashboard pour l'analyse des logs Shuttle issues de l'exécution du test de performance. 
+\begin{figure}[!ht]\centering
+\includegraphics[scale=0.42]{"elastic-shuttle-performance".png} 
+\caption{Dashboard Kibana Shuttle Performance}
+\label{fig:fig10}
+\end{figure}
+\FloatBarrier
+Nous avons également mis en place un dashboard Grafana pour le monitoring du serveur Bench-Worker1 qui héberge Shuttle. 
+\begin{figure}[!ht]\centering
+\includegraphics[scale=0.42]{"grafana1".png} 
+\caption{Dashboard de monitoring serveur}
+\label{fig:fig11}
+\end{figure}
+\FloatBarrier
+Et finalement, pour le monitoring de la JVM Shuttle, nous avons configuré le serveur pour permettre ceci. Il suffit qu'un Java Mission Control ait le login et mot de passe pour se connecter en JMX et surveiller la JVM.
+Nous voyons le dashboard analytique offert JFR et JMC à l'aide de la figure III.12. 
+\begin{figure}[!ht]\centering
+\includegraphics[scale=0.35]{"jmc".png} 
+\caption{Console Java Mission Control}
+\label{fig:fig12}
+\end{figure}
+\FloatBarrier
+\subsection{Évaluation du travail réalisé}
+Nous allons évaluer notre solution à l'aide de tableau suivant. 
+\begin{table}[ht]
+	\centering
+	\caption{Tableau d’évaluation de la solution}
+	\footnotesize
+	\begin{tabularx}{\textwidth}{|p{4.2cm}|X|}
+          \hline 
+          {\textbf{Besoin}} & \multicolumn{1}{T|}{{\textbf{Réalisation}}} \\
+          \hline
+           Automatisation du processus de Benchmark Test & Nous avons réussi à automatiser la méthode de test de performance, partant de la mise à jour de la configuration à la fin de l'exécution de test.\\
+           \hline
+           Reporting des résultats de tests & Notre solution intègre la stack Elastic qui offre la dynamicité et l'interactivité avec les résultats de tests à l'aide de l'outil Kibana.\\
+           \hline
+            Monitoring \& Analytics & La solution offre deux vues de monitoring, une côté serveur, sur les conteneurs et stacks Docker, et l'autre côté  code, interaction entre les classes avec des metrics de bas niveau.\\
+          \hline
+           Sécurité et droits d’accès & Les plateformes sous-jacentes au pipeline gèrent la sécurité et les droits d'accès.\\
+           \hline
+        \end{tabularx}
+\end{table}
+\subsection{Test}
+Pour tester le pipeline et s'assurer des résultats obtenus, nous avons lancé un test de benchmark avec notre solution mais aussi en utilisant l'ancienne méthode. Nous avons bien trouvé les mêmes résultats à la fin de test. La figure III.13 montre les résultats avec l'ancienne méthode en utilisant Excel.
+\begin{figure}[!ht]\centering
+\includegraphics[scale=0.4]{"excel".png} 
+\caption{Les résultats avec l'ancienne méthode}
+\label{fig:fig13}
+\end{figure}
+\FloatBarrier
+La figure III.14 montre les résultats obtenus avec notre solution. 
+\begin{figure}[!ht]\centering
+\includegraphics[height=5cm,width=18cm]{"elastic".png} \caption{Les résultats avec le Bench-Tests-Pipeline}
+\label{fig:fig14}
+\end{figure}
+\FloatBarrier
+\section*{Conclusion}
+Ce chapitre nous a permis de présenter notre deuxième projet, le Bench Tests Pipeline. Nous avons pu couvrir les phases de spécifications des besoins, la conception et les choix technologiques et architecturaux, ainsi que la réalisation des différentes parties du projet et l'évaluation et le test de la solution.
+
+%==============================================================================
+\end{spacing}

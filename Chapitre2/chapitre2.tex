@@ -1,0 +1,554 @@
+
+\setcounter{chapter}{1}
+%\chapter{Conception}
+\chapter{IFRS16 CI/CD Pipelines}
+\minitoc %insert la minitoc
+\graphicspath{{Chapitre2/figures/}}
+
+%\DoPToC
+
+%==============================================================================
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[R]{\bfseries\rightmark}
+\fancyfoot[R]{\thepage}
+\renewcommand{\headrulewidth}{0.5pt}
+\renewcommand{\footrulewidth}{0pt}
+\renewcommand{\chaptermark}[1]{\markboth{\MakeUppercase{\chaptername~\thechapter. #1 }}{}}
+\renewcommand{\sectionmark}[1]{\markright{\thechapter.\thesection~ #1}}
+
+\begin{spacing}{1.2}
+%==============================================================================
+\section*{Introduction}
+Ce chapitre présente le cycle de développement de notre projet IFRS16 CI/CD Pipelines. Pour cela, nous commencerons par la phase d’analyse et spécification des besoins, pour mieux comprendre le besoin. Nous introduisons les paradigmes suits, les choix technologiques et architecturaux. Nous passons, ensuite, à la présentation de l’environnement de travail et l’évaluation du résultat obtenu.
+\section{Analyse et spécification des besoins}
+\subsection{IFRS16}
+\textbf{La norme} :
+Aujourd’hui, les entreprises comptabilisent leurs contrats de location directement dans leur compte de résultat. Selon le nouveau standard, elles devront, à l’avenir, faire apparaître au bilan un actif (le « Droit d’Utilisation », égal à la valeur nette actualisée des paiements futurs), et une dette de loyers correspondante à cet actif. 
+IFRS16 est une norme comptable qui s'applique aux contrats de location pour les entreprises. Selon cette dernière, une location est, pour le preneur comme pour le bailleur, un contrat qui confère au preneur le droit d’utiliser un actif pendant une période déterminée en échange d’une rémunération\cite{ifrs16}. \\
+
+\textbf{L'application} :
+Appelée K-IFRS16, l'application basée sur le Shuttle qui implémente la norme IFRS16. Cette dernière compte plus de 50 clients en France, aux Etats-Unis, l'Australie et d'autres pays. 
+Parmi ces clients, Konvergence compte des sociétés d'envergure internationale comme BNP Parisbas et Carrefour pour qui la fiabilité et la pertinence des données sont deux axes hyper importants. 
+La figure II.1 présente d'une manière simplifiée l'architecture technique de l'application K-IFRS16\cite{intern}. \\
+\begin{figure}[!ht]\centering
+\includegraphics[scale=0.5]{"application-ifrs16".png}
+\caption{Architecture technique de l'application K-IFRS16}
+\label{fig:fig1}
+\end{figure}
+
+Nous expliquerons dans le tableau suivant le role chaque composant. 
+\begin{table}[ht]
+	\centering
+	\caption{Composants de l'application IFRS16}
+	\footnotesize
+	\begin{tabularx}{\textwidth}{|p{3.3cm}|X|}
+          \hline
+          {\textbf{Composant}}
+          & 
+          {\textbf{Description}} 
+          \\
+          \hline
+          {\textbf{Shuttle Server}} & Le coeur de Shuttle, permet la modélisation et la construction des applications basées sur des modèles de données multi-dimensionnels. \\    \hline
+          {\textbf{Shuttle Repository}} & C'est le répertoire contenant l'ensemble des cubes, des applications, des scripts et de toute autre resource construisant une ou plusieurs applications Shuttle complètes.  \\          \hline
+          {\textbf{Proc}} & La Procédure représente un plugin conçu pour les calcules complexes de l'application IFRS16. Techniqument, c'est une application Java qui, grace à un Wrapper JEXL, peut s'intègrée et étendre les capacités du Shuttle Server.\\          \hline
+          {\textbf{Files}} & Différentes ressources à savoir des scripts JEXL, des fichiers de tests, des images, des CSVs et autres binaires. \\          \hline
+          {\textbf{Client Shuttle FX}} & Le frontale, l'IHM permettant à l'utilisateur final d'intéragir avec ses applications Shuttle.\\          \hline
+          {\textbf{SOAP}} & Simple Object Access Protocol, Le protocol de communication Client/Serveur de la plateforme. \\          \hline
+        \end{tabularx}
+	\label{tab:exple}
+\end{table}
+\subsection{Identification des acteurs}
+Une équipe comportant des développeurs, des testeurs et des fonctionnels travaille sur l'application K-IFRS16. Nous avons identifé les acteurs pertinents pour l'utilisation des pipelines IFRS16.  
+\begin{itemize}
+    \setlength\itemsep{0em}
+    \item[--] \textbf{Le développeur} : C'est un acteur majeur agissant sur l'application Java IFRS16. Il joue un rôle primoridiale dans l'intégration et la livraison continue du produit. 
+    \item[--] \textbf{Le testeur} : Se charge de la conception, de l'implémentation et de la maintenance des tests de l'application. Ce dernier intégrera ses tests dans la chaine CI/CD pour maintenir la stabilité de K-IFRS16 et de garantir sa performance.
+    \item[--] \textbf{Le consultant} : S'occupe du support client, l'adaptation et la configuration de l'application selon les besoins. Le consultant s'intéressera à la livraison continue du produit K-IFRS16, sous forme d'artefactes facilement déployables contenant les dernières fonctionnalités, corrections des bugs et améliorations, et ce chaque jour d'une manière continue.   
+\end{itemize}
+\subsection{Spécification des besoins fonctionnels}
+La figure II.2 décrit le diagramme de cas d’utilisation du système et des besoins à satisfaire.
+\begin{figure}[!ht]\centering
+\includegraphics[scale=0.5]{"use-case-ifrs16-pipeline".png}
+\caption{Cas d'utilisation - IFRS16 Pipeline}
+\label{fig:fig2}
+\end{figure}
+\FloatBarrier
+On distingue deux types de fonctionnalités dans ce projet : \textbf{les fonctionnalités métier} et \textbf{les fonctionnalités liées à l'infrastructure}. 
+\subsubsection{Fonctionnalités métier}
+Ces fonctionnalités remplissent les besoins des acteurs de point de vue métier, à savoir :
+\begin{itemize}
+    \setlength\itemsep{0em}
+    \item[--] \textbf{Lancer le pipeline} : Nous expliquerons le déroulement de ce cas d'utilisation à l'aide de la figure II.3.
+    \item[--] \textbf{Activer les tests} : Un acteur peut activer les tests qu'il souhaite : des tests JEXL, qui interagissent avec les grilles Shuttle [annexe A.3], et vérifient la consistance et la non-régression après les modifications effecutées par les développeurs sur l'application IFRS16. D'autre part, les tests Replayer, qui principalement rejouent un scenario en mode IHM pour simuler des actions effectués par l'utilisateur final. Ces tests vérifient à la fois la non-régression côté serveur et côté client. 
+    \item[--] \textbf{Consulter les résultats de tests} :
+    Les acteurs peuvent consulter les résultats de tests, dont on garde l'historique horodaté de chaque exécution. Ces résultats sont disponibles sur le serveur Shuttle correspondant au test, et également envoyés aux personnes concernées par cette exécution, via e-mail.
+    \item[--] \textbf{Builder la Proc IFRS16} : Un acteur peut choisir de construire la procédure Java IFRS16, afin de prendre en compte des modifications dans le code.
+    \item[--] \textbf{Déployer des changements dans la Proc} : Déployer la procédure IFRS16 dans l'Artifactory ou non.
+    \item[--] \textbf{Déployer les tests} :
+    Nous utiliserons une description textuelle, tableau II.2, pour expliquer ce cas d'utilisation.
+\end{itemize}
+\begin{table}[ht]
+	\centering
+	\caption{Description textuelle du cas d’utilisation "Déployer les tests"}
+	\footnotesize
+	\begin{tabularx}{\textwidth}{|p{3.3cm}|X|}
+          \hline
+          {\textbf{Acteur}}
+          & 
+          Testeur ou développeur
+          \\
+          \hline
+          {\textbf{Événement déclencheur}}
+          & 
+         Demande de déploiement de nouveaux scenarios de test.
+          \\
+          \hline
+          {\textbf{Parties prenantes et intérêts}}
+          & 
+          Les acteurs peuvent créer et déployer des nouveaux scenarios de test afin de les ajouter à la chaine d'intégration continue IFRS16. Ces scenarios seront exécutés à chaque déclenchement du pipeline. 
+          \\
+          \hline
+          {\textbf{Préconditions}}
+          & 
+          Authentification et disponibilité des scenarios sur VCS sous un répertoire bien structuré.
+          \\
+          \hline
+          {\textbf{Postconditions}}
+          & 
+          Les tests sont déployés et prets à s'exécuter.
+          \\
+          \hline
+          {\textbf{Scénario nominal}}
+          & 
+          \vspace{-4mm}
+          \begin{enumerate}
+          \setlength\itemsep{0em}
+              \item Développer les scénarios de test sur l'environnement Shuttle que le Pipeline utilisera par la suite.
+              \item Commiter le répertoire et les ressources de tests dans le répertoire prévu à cet effet.
+              \item Lancer le Job Jenkins dédié au déploiement des tests.
+              \item Se connecter au serveur Shuttle pour vérifier le bon déploiement des tests.
+          \end{enumerate}
+          \\
+          \hline
+          {\textbf{Les extensions}}
+          &  
+          Lancer les tests et obtenir des snapshots du Repository Shuttle attaqué par les scenarios de test.
+          \\
+          \hline
+        \end{tabularx}
+	\label{tab:exple}
+\end{table}
+\FloatBarrier
+Le digramme ci-dessous explique le déroulement de cas d'utilisation "Lancer le pipeline", que par la suite, servira à la conception de notre pipeline.
+\begin{figure}[!ht]\centering
+\includegraphics[scale=0.43]{"lancer-le-pipeline".png}
+\caption{Déroulement de cas d'utilisation : Lancer le pipeline}
+\label{fig:fig3}
+\end{figure}
+\FloatBarrier
+\subsubsection{Fonctionnalités infrastructure}
+Aujourd'hui, l'infrastructure est une brique essentielle dans le domaine de l'intégration continue. Afin de répondre au maximum des besoins, faciliter la maintenance et donner le plus de flexibilité, nous avons choisi d'utiliser le concept d'Infrastruture as Code, pour piloter la configuration des environnements de tests de façon automatique en utilisant des fichiers de configurations. \\
+Nous avons extrait les fonctionnalités infrastructure suivantes :
+\begin{itemize}
+\setlength\itemsep{0em}
+\item[--] \textbf{Déployer des configurations} : Permet à l'équipe IFRS16 de configurer l'infrastructure de son environment de tests, afin d'etre le plus proche possible de l'environnement de production, nous citons :
+    \begin{itemize}
+    \setlength\itemsep{0em}
+    \item[\textbullet] La configuration JVM : La mémoire réserver pour la Java Virtual Machine, l'activation de quelque fonctionnalités dans la Java 8 : Java Flight Recording pour le monitoring de la JVM ; le mode de fonctionnement du serveur : headless\footnote{c'est le mode sans graphique de Java} ou graphique, etc.
+    \item[\textbullet] Les options de serveur Shuttle : Le nombre de thread workers qui peuvent effecuter des taches en parallèles, le nombre de connexion possible, etc.
+    \item[\textbullet] La configuration VDB : La base de données virtuelle de Shuttle est une base de données transactionelle multi-dimensionelle permettant l'accélération de l'accés aux données. Cette partie du serveur est configurable via un fichier properties.
+    \end{itemize}
+\item[--] \textbf{Construire l'environment Cloud} :
+Permet à l'équipe de construire un environment cloud dédié au test. Cet environment semblable à celui de prod, peut etre configurer via le code à l'aide de Docker et Rancher. Nous pouvons également ajouter des services autres que le Shuttle Server, telque : 
+    \begin{itemize}
+    \setlength\itemsep{0em}
+    \item[\textbullet] OwnCloud : Une plateforme connetée au serveur Shuttle pour gérer le système de fichier de ce dernier.
+    \item[\textbullet] Tailon : Un utilitaire pour consulter et inspecter les fichiers de logs.
+    \item[\textbullet] Logstash : Un composant intégrant la Elastic Stack pour l'ingestion des logs Shuttle dans ElasticSearch afin de les visualiser dans Kibana.
+    \end{itemize}
+\end{itemize}
+\subsection{Spécifications des besoins techniques et non fonctionnels}
+En plus des exigences fonctionnelles, des contraintes techniques et des opérations non fonctionnelles doivent être prises en compte au cours de la réalisation du projet :
+\begin{itemize}
+\setlength\itemsep{0em}
+\item[--] \textbf{Performance} : L'exécution du pipeline doit être optimisée au maximum.
+\item[--] \textbf{Extensibilité et maintenabilité} : Permettre l'exécution des jobs séparément, exemple, lancer uniquement les tests JEXL. Permettre également de modifier des parties du pipeline, en supprimer ou ajouter des jobs sans toucher aux autres. 
+\item[--] \textbf{Sécurité et droits d’accès} : Doit assurer la sécurité et la gestion des droits d’accès aux jobs et au serveur Shuttle.
+\item[--] \textbf{Haute disponibilité} : L'environnement cloud doit être prêt à exécuter les tests. De plus, le Shuttle doit exposer les captures de l'état du repository après chaque test, pour permettre aux testeurs d'investiguer les éventuelles erreurs.
+\item[--] \textbf{Infrastructure reproductible} : Doit être capable de remonter l'infrastructure de la machine virtuelle facilement. 
+\item[--] \textbf{Provisionnement automatique} : Doit être capable de provisionner automatiquement des machines avec une configuration bien précise afin de les ajouter au pipeline. 
+\end{itemize}
+
+\section{Conception et architecture}
+\subsection{Conception et choix technologiques}
+\subsubsection{Conception}
+Dans le monde DevOps, les pipelines sont conçus comme des applications en se basant sur le nouveau paradigme Pipeline as Code "PaC"[annexe B.1]. Nous allons commencer par la décomposition en stage du pipeline IFRS16.
+Les stages sont ensuite décomposés en steps, qui représentent des instructions élémentaires dans un pipeline. Le digramme suivant explique la décomposition générale des pipelines basée sur le paradigme PaC.
+
+\begin{figure}[!ht]\centering
+\includegraphics[scale=0.5]{"pipeline-as-code-latest".png}
+\caption{Structure générale d'un Pipeline PaC}
+\label{fig:fig1}
+\end{figure}
+\FloatBarrier
+Nous allons expliquer chaque composant dans un pipeline pour mieux concevoir la chaine CI/CD IFRS16 :
+\begin{itemize}
+\setlength\itemsep{0em}
+\item[--] \textbf{Pipeline} : 
+Le composant le plus global, contenant toute la logique du processus automatisé. Un pipeline s'exécute sur une ou plusieurs machines physiques. Il peut être déclenché par l'utilisateur, une alarme périodique ou un évènement déclencheur quelconque, exemple : la fin d'exécution d'un autre pipeline.
+\item[--] \textbf{Stage} : un composant homogène qui sert à effectuer un job (travail) bien précis. Les stages peuvent s'exécuter en parallèle ou d'une manière séquentielle. Des chemins d'exécution peuvent être déterminés grace à des structures conditionnelles. 
+\item[--] \textbf{Step} : C'est le composant élémentaire effectuant une instruction dans un Stage. Les steps peuvent également être exécuté parallèlement ou séquentiellement. 
+\end{itemize}
+La figure II.5 présente la conception du pipeline IFRS16. 
+
+\begin{figure}[!ht]\centering
+\rotatebox[origin=c]{-90}{\includegraphics[height=7cm,width=23cm]{"ifrs16-pipeline-stage-step".png}}
+\caption{Décomposition en Stages du Pipeline IFRS16}
+\label{fig:fig1}
+\end{figure}
+\FloatBarrier
+Nous expliquerons en détails la conception de notre solution dans ce qui suit :
+\begin{itemize}
+\setlength\itemsep{0em}
+\item[--] \textbf{IFRS16-Pipeline} : C'est l'ensemble de stages exécutés séquentiellement.
+\item[--] \textbf{Build, Test \& Deploy} : Prend les dernières modifications disponibles dans la VCS, et construit l'artefact de l'application IFRS16, lance les tests unitaires, enfin déploie l'artefact dans l'Artifact Repository.
+\item[--] \textbf{Deploy new Cloud Env} : Prépare un nouvel environnement sur l'infrastructure Cloud interne à la société. Le déploiement est vérifié par un acquittement envoyé par la plateforme Cloud.
+\item[--] \textbf{Setup Shuttle Files} : Un jeu d'instructions dans le système de fichiers du serveur Shuttle permettant de préparer convenablement ce dernier pour l'exécution des tests. Ce stage permet de récupérer la dernière version de l'environnement de développement de l'application IFRS16 sous la forme d'un backup de repository ainsi que les différents fichiers nécessaires pour la construction d'un environnement Production-Like. Enfin, il redémarre le serveur pour prendre en considération les différentes configurations.
+\item[--] \textbf{Restore SHUT\_REPO Backup} : Déclenche une Task Shuttle pour la restoration du SHUT\_REPO.
+\item[--] \textbf{Run Replayer Scenarios} : Met à jour le projet contenant les scénarios de tests et lance le Replayer, publie ainsi les résultats obtenus à la fin du stage.
+\item[--] \textbf{Run JEXL Tests} : Met à jour le projet de tests JEXL, lance les tests un par un et prend des captures sur l'état du SHUT\_REPO après l'exécution de chaque test. Enfin, envoie les résultats par e-mail.
+
+\end{itemize}
+\subsubsection{Choix technologiques}
+\textbf{a. Intégration et livraison continues} :
+Notre solution est dans le centre de l'intégration et la livraison continues. Jenkins était la solution mise en place pour l'intégration continue de la plateforme Shuttle mais pour s'assurer que cet outil répondait bien aux nouveaux besoins du développement de l'application IFRS16, nous avons dû réaliser une étude comparative des différents outils de CI/CD existants sur le marché. \\
+Le tableau suivant présente un comparatif entre les différentes solutions disponibles. 
+\FloatBarrier
+\begin{table}[ht]
+	\centering
+	\caption{Tableau comparatif entre les quatres leaders dans le monde CI/CD}
+	\footnotesize
+	\begin{tabularx}{\textwidth}{|p{1.4cm}|X|X|X|}
+          \hline
+          & 
+          {\textbf{Fonctionnalités}}
+          &
+          {\textbf{Mode de déploiement}}
+          &
+          {\textbf{License, prix \& support}}
+          \\
+          \hline
+          \textbf{Jenkins}
+          &
+          Tout type d'automatisation.
+          Plus de 1000 plugins.
+          S'intègre parfaitement avec les outils DevOps.
+          Implémente le paradigme PaC avec la Groovy DSL.
+          &
+          Cross-platform, peut etre déployé On-Premises et sur le Cloud.
+          &
+          MIT, Opensource \& gratuit.
+          Communauté vaste et active.
+          Support technique avancé par l'équipe BlueOcean. 
+          \\
+          \hline
+          \textbf{TeamCity}
+          &
+          Des fonctionnalités riches prédéfinies. 
+          Pas besoin d'un grand nombre de plugins, comme dans le cas de Jenkins, pour mettre en place des pipelines basiques. 
+          S'intègre avec les produits JetBrains, comme IntelliJ.
+          &
+          Cross-platform, peut etre déployé On-Premises et sur le Cloud.
+          &
+          Propriètaire \& payant.
+          Un agent de build coute 299 \$. Le plan "Entreprise", comportant 3 agents de build et un an de mis à jour, coute 1999 \$. 
+          Support via les forums et les services techniques. 
+          \\
+          \hline
+          \textbf{Bamboo}
+          &
+          Workflow de branchement Git natif. 
+          S'intègre avec Jira et Bitbucket.
+          Offre une API REST.
+          &
+          Cross-platform, peut etre déployé On-Premises et sur le Cloud.
+          &
+          Propriètaire \& payant.
+           Jobs illimités, builds illimités, agents locaux illimités. Un agent distant 1100 \$, 5 agents distants 3030 \$.
+          \\
+          \hline
+          \textbf{GoCD}
+          &
+          Des workflows complexes prédéfinies. 
+          Parallèlisation native. 
+          Gestion de dépendances.
+          Tracabilité avancée. 
+          &
+          On-premises sur Windows et Mac, et peu de distribution Linux.
+          &
+          Apache 2.0, Opensource \& gratuit.
+          Support technique par l'équipe ThoughtWorks payant.
+          \\
+          \hline
+        \end{tabularx}
+	\label{tab:exple}
+\end{table}
+\FloatBarrier
+On se basant sur cette étude comparative, nous avons choisi d'utiliser le serveur d'automatisation le plus flexible, ayant la plus grosse communauté et support sur GitHub et autres forums, \textbf{Jenkins}.
+\vspace{2mm}
+
+\textbf{b. Gestion de configuration et provisonnement automatique} : 
+Parmis nos exigences techniques non fonctionnels, nous avons la reproducibilité de l'infrastructure serveurs et le provisonnement\footnote{calque français du mot provisioning, mot anglais désignant l'approvisionnement, est un terme utilisé dans le monde de l'informatique, désignant l'allocation automatique de ressources.} automatique. Pour cela, nous avons effectué une étude comparative sur les outils qui repondent à ces besoins. 
+
+Nous citons les plateformes suivantes : 
+
+\textbf{Puppet} : Développé par Puppet Labs en 2005, Puppet est un framework opensource permettant la gestion de configuration serveurs. Basé sur le langage de programmation Ruby, et implémentant l'architecture Master-Slave, l'outil utilise une DSL pour codifier la configuration des machines esclaves.
+
+\textbf{Ansible} : Développé par Ansible en 2O12,
+la plateforme est détenue par RedHat. Opensource, Ansible permet la gestion de configuration, l'exécution des commandes ad-hoc\footnote{utilisée pour effectuer une action rapidement et sans persister le résultat} et le provisonnement d'infrastructure, basé sur le paradigme Infrastructure as Code "IaC". 
+
+\textbf{Chef} : Prennant de plus en plus du succés dans le monde DevOps, Chef a été développé par Opscode en 2009. Opensource et écrit en Ruby, le logiciel permet, par le bails d'une architecture Master-Slave ou Standalone, la configuration des machines et le provisonnement automatique.
+
+Les critères de choix entre ces trois sont décrits par le Tableau II.4. 
+
+\begin{table}[ht]
+	\centering
+	\caption{Tableau comparatif entre les serveurs de configuration et provisonnement automatique}
+	\footnotesize
+	\begin{tabularx}{\textwidth}{|p{4cm}|X|X|X|}
+          \hline & {\textbf{Ansible}} & {\textbf{Chef}} & {\textbf{Puppet}} \\
+          \hline
+          Architecture Master-Slave & Oui & Oui & Oui \\
+          \hline
+          Mode Standalone & Oui & Oui & Oui \\
+          \hline
+          Agentless & Oui & Non & Non
+          \\ 
+          \hline
+          Mise en place et démarrage & Facile & Difficile & Difficile \\
+          \hline
+          REST API & Oui & Oui & Oui \\
+          \hline
+          Interface utilisateur & Opensource/Gratuite & Payante & Payante \\
+          \hline
+          Communauté Opensource & Oui & Oui & Oui \\
+          \hline
+          Modules et plugins & Riche & Limité & 
+          Riche \\
+          \hline
+          Courbe d'apprentissage & Courte & Longue & Longue \\
+          \hline
+          Extensible & Oui & Oui & Oui \\
+          \hline
+          Scalabilité & N'est pas recommandé & Recommandé & Très recommandé \\
+          \hline
+          DevOps & Très recommandé & Recommandé & Recommandé \\
+          \hline
+        \end{tabularx}
+	\label{tab:exple}
+\end{table}
+\FloatBarrier
+Bien que Puppet soit la plateforme la plus mature parmis ces trois, notre choix s'est dirigé sur Ansible. Les critères de choix étant la facilité de mise en place, la richesse de ses librairies s'ajoutant à l'ensemble des capacités et fonctionnalités qu’il propose. 
+
+\vspace{2mm}
+
+\textbf{c. Conteneurisation et orchestration} : Le Shuttle est une application Dockerisée permettant l'intéraction avec des autres services comme la base de données. L'orchestration efficace de ces derniers est un sujet primordial pour réussir le processus de CI/CD. 
+
+De nombreuses plateformes facilitent la gestion et l'orchestration des conteneurs Docker. Nous basant sur une étude approfondie des solutions disponibles sur le marché, nous avons limité notre choix entre : 
+
+\textbf{Rancher} : C'est un orchestrateur léger, développé par Rancher Labs, il répartit des conteneurs sur un cluster de serveurs. Rancher met à disposition des moyens qui permettent de ranger les conteneurs par service (brique applicative) et par application (ensemble de services). Aujourd'hui, Rancher permet l'orchestration de clusters Kubernetes aussi. 
+
+\textbf{OpenShift} : La plateforme opensource de RedHat qui permet de déployer des applications dans des containers. OpenShift offre des services de type PaaS pour le déploiement et l'orchestration de Docker et Kubernetes.
+
+Nous présentons le Tableau II.5 pour comparer ces deux plateformes. 
+
+\begin{table}[ht]
+	\centering
+	\caption{Tableau comparatif entre les serveurs de configuration et provisonnement automatique}
+	\footnotesize
+	\begin{tabularx}{\textwidth}{|X|X|X|}
+          \hline & {\textbf{Rancher}} & {\textbf{OpenShift}} \\
+          \hline
+          Lourdeur  & Light & Lourd\\
+          \hline
+          Orchestration Docker & Oui & Oui \\
+          \hline
+          Orchestration Kubernetes & Oui & Oui \\ 
+          \hline
+          Catalogue & Riche & Richer \\
+          \hline
+          REST API & Oui & Oui \\
+          \hline
+          Interface utilisateur & Unifiée \& Intuitive & Riche mais difficile \\
+          \hline
+          Ligne de commande & Oui & Oui \\
+          \hline
+          Courbe d'apprentissage & Courte & Longue \\
+          \hline
+          Intégration avec les serveurs CI/CD & Oui & Oui \\
+          \hline
+        \end{tabularx}
+	\label{tab:exple}
+\end{table}
+\FloatBarrier
+Après avoir étudier le sujet profondément, nous avons opté pour la solution \textbf{Rancher} dont les avantages sont la simplicité et la rapidité de prise en main.
+
+\subsection{Architecture technique}
+Après avoir fixé le périmètre technologique sur lequel nous allons travailler, nous procèderons à la mise en place du pipeline, nous devons penser pour cela à l’infrastructure sous-jacente. Nous commencerons par la gestion de configuration constituant cette dernière.
+\vspace{0mm}
+\subsubsection{Gestion de configuration}
+Pour mieux configurer les serveurs de notre infrastrucutre, nous nous basons sur l'outil de gestion de configuration et provisonnement automatique \textbf{Ansible}. 
+\begin{figure}[!ht]\centering
+\includegraphics[scale=0.25]{"ansible-architecture".png}
+\caption{Gestion de configuration de l'infrastructure du Pipeline IFRS16}
+\label{fig:fig1}
+\end{figure}
+\FloatBarrier
+\vspace{2mm}
+La machine de controle Ansible envoie des fichiers YML, nommés "Playbooks" via SSH. Un Playbook est un script déclaratif, décrivant la configuration d'une machine ou d'un groupe de machines. Le script contient une liste d'actions à effectuée afin de atteindre un état bien déterminé, exemple : installer un outil, ajouter un utilisateur et lui à donner les droits d'accès à l'outil installé. Les machines Target, réparties en groupe (workers, jenkins-slaves...), exécutent les scripts YML et envoient des acquittements à la machine de contrôle. 
+\subsubsection{Infrastructure}
+L'infrastructure du Pipeline IFRS 16 a été conçue sur les bases et les bonnes pratiques de CI/CD, à savoir : 
+\begin{itemize}
+\setlength\itemsep{0em}
+\item[--] \textbf{Architecture Master-Slave} : Un serveur maitre envoie les jobs à exécuter aux machines esclaves. Les machines esclaves, appellées aussi Agents, sont des machines génériques, connectées au maitre, contenant des CLI vers les outils de déploiement telque Rancher, des connexions WebDav au Shuttles ou des utilitaires en ligne de commande. 
+\item[--] \textbf{Workers} : Les Workers sont des machines puissantes en terme d'infrastructure, avec des configuration bien spécifiques, contrairement aux Agents, et ils hébergent les stacks Shuttle ainsi que les différents services liés. Nous éxpliquerons l'architecture complète par la Figure II.6. 
+\item[--] \textbf{Everything as Code} : EaC est le concepte qui englobe les paradigmes Pipeline as Code et Infrastructure as Code. Le DevOps de nos jours met l'accent sur la 'codification' de l'ensemble de la chaine, pour faciliter la reproduction des infrastructures et méchanismes d'automatisation.
+\end{itemize}
+La figure suivante représente l'infrastructure du projet. 
+\begin{figure}[!ht]\centering
+\includegraphics[scale=0.25]{"architecture-jenkins-ifrs16".png}
+\caption{Infrastructure du Pipeline IFRS16}
+\label{fig:fig1}
+\end{figure}
+\FloatBarrier
+\vspace{2mm}
+Le serveur Master, en utilisant une connexion SSH, envoie les jobs à executer au Slave. L'agent esclave copie la configuration de l'environment de Prod, grâce à un montage WebDav, et déploie des environments "Production-like",  sur les Workers. Ensuite, l'esclave lance les taches déclenchant les tests. 
+\subsubsection{Architecture} 
+Après avoir décrit la partie infrastructure, nous présontons l'architecture complète du Pipeline. La Figure II.8 montre les différents stages, de la réccupération du code source à la publication des résultats des tests et l'envoie des notifications.
+\begin{figure}[!ht]\centering
+\rotatebox[origin=c]{-90}{\includegraphics[height=13cm,width=23cm]{"ifrs16-pipeline".png}}
+\caption{Architecture technique - Pipeline IFRS16}
+\label{fig:fig1}
+\end{figure}
+\FloatBarrier
+Nous voyons dans la section qui suit la réalisation du projet ainsi que les différents tests efféctués.
+\section{Réalisation}
+\subsection{Environnement de travail matériel et logiciel}
+\subsubsection{Environnement de travail matériel}
+Durant notre stage, nous avons travaillé sur des postes possédant une mémoire de 16 Go, un disque dur de 500 Go en HDD, un deuxième de 500 Go en SDD et un processeur Intel Core TM i7. Pour le système d’exploitation, nous avons interagi avec des machines Windows et Linux.
+\subsubsection{Environnement de travail logiciel}
+Notre environnement de travail logiciel est composé de :
+\begin{itemize}
+    \setlength\itemsep{0em}
+    \item[--] \textbf{IntelliJ IDEA} : Afin de développer les briques de notre projet, nous avons opté à la solution de JetBrains, pour sa intégration parfaite avec le Groovy DSL, le langage utilisé par Jenkins pour implémenter des pipelines. 
+    \item[--] \textbf{Maven} : Afin d’automatiser les tâches de gestion des dépendances, ainsi que le cycle de développement du projet ; production, déploiement, test, nous avons choisi de travailler avec Maven. 
+    \item[--] \textbf{Bitbucket} : Nous avons intégré un serveur Bitbucket sur le réseau interne de l’entreprise. La solution Git collaborative d'Atlassian nous permet la gestion du code source et des fichiers de configuration. 
+    \item[--] \textbf{Microsoft Teams} : Plateforme d’échange et de collaboration sécurisée d'Office 365 facilitant le travail en équipe via la visioconférence Skype et la messagerie instantanée.
+    \item[--] \textbf{Confluence} : Plateforme de gestion des documents. Il s’agit d’un serveur de documentation où nous créons, organisons et discutons du travail avec l’équipe.
+    \item[--] \textbf{Portus} : Un outil intégrant une registry Docker dans laquelle nous avons enregistré les images que nous avons créées. Il permet aussi de les gérer et de collaborer avec les autres équipes.
+    \item[--] \textbf{Rancher Labs} : Plateforme de gestion de conteneurs et des images docker enregistrées sous Portus.
+    \item[--] \textbf{Grafana} : Plateforme de monitoring serveurs. Très avancé, Grafana offre des metrics de consommation CPU, mémoire et même d'électricité.
+    \item[--] \textbf{Alert manager} : Gestionnaire d'évenments permettant l'envoie des alertes déclenchés par Grafana. 
+    \item[--]\textbf{AWX} : Plateforme opensource permettant l'intéraction avec Ansible en mode IHM. 
+    \item[--]\textbf{Gitkraken} : Client Git, facilitant l'intéraction avec notre serveur Bitbucket.
+    \item[--] \textbf{Navigateur web} : Google Chrome.
+    \item[--] \textbf{Xmind} : Un logiciel de mind mapping facilitant la description rapide des différentes investigations. 
+\end{itemize}
+\subsection{Scénario d’utilisation}
+Etant donné que le projet est entièrement automatisé, nous voyons les différentes interfaces mises à la disposition aux utilisateurs finaux.
+Nous commençons par l’interface Jenkins du pipeline. Avant de lancer, un utilisateur avec les droits adéquats peut choisir les options selon les besoins. 
+\begin{figure}[!ht]\centering
+\includegraphics[scale=0.4]{"interface-jenkins".png}
+\caption{Console Jenkins du projet IFRS16 Pipeline}
+\label{fig:fig1}
+\end{figure}
+\FloatBarrier
+La Figure suivante montre les différents stage du Pipeline.
+\begin{figure}[!ht]\centering
+\includegraphics[scale=0.3]{"ifrs16-run-pipeline".png}
+\caption{Exemple de lancement du IFRS16-Pipeline}
+\label{fig:fig1}
+\end{figure}
+\FloatBarrier
+\vspace{-3mm}
+Passons au déploiement automatique de l'environment sur Rancher. L'outil expose une IHM pour la gestion et le monitoring des stacks et services. 
+\begin{figure}[!ht]\centering
+\includegraphics[scale=0.3]{"rancher".png}
+\caption{Stack IFRS16 sur Rancher}
+\label{fig:fig1}
+\end{figure}
+\FloatBarrier
+\vspace{-3mm}
+Nous voyons maintenant, l'exécution de tests Replayer, les snapshots du Repo et le reporting. 
+\begin{figure}[!ht]\centering
+\includegraphics[scale=0.38]{"replayer-ifrs16".png}
+\caption{Lancement automatique du client Shuttle via le plugin Replayer}
+\label{fig:fig1}
+\end{figure}
+\begin{figure}[!ht]\centering
+\includegraphics[scale=0.35]{"reporting".png}
+\caption{Console d'administration de Shuttle permettant de visualiser et exporter les résultat des tests }
+\label{fig:fig1}
+\end{figure}
+\FloatBarrier
+
+\begin{itemize}
+\setlength\itemsep{0em}
+\item[--] \textbf{BACKUP\_REPO\_*} : Ce sont des snapshots par scenario de test. Ceci permet au testeur, développeur et experts metier d'identifier rapidement, en important le snapshot en erreur, les anomalies dans l'application.
+\item[--] \textbf{Les rapports de tests} : Ce sont des dossiers, résidant sur le serveur Shuttle où ont été exécutés les tests et contenant des fichiers CSV résumant l'exécution du scenario.  
+\end{itemize}
+\subsection{Évaluation du travail réalisé}
+Nous avons effectué une évaluation du travail réalisé afin de vérifier l’alignement avec les différentes spécifications.
+\begin{table}[ht]
+	\centering
+	\caption{Tableau d’évaluation des spécifications des besoins techniques et non-fonctionnels}
+	\footnotesize
+	\begin{tabularx}{\textwidth}{|p{4.2cm}|X|}
+          \hline 
+          {\textbf{Spécifications des besoins non-fonctionnels}} & \multicolumn{1}{T|}{{\textbf{Réalisation}}} \\
+          \hline
+           Automatisation et retour rapide & Totalement automatisé, le processus de intégration, test et livraison d'application met 1h30 pour lancer plus que 14 scenarios de tests assez exaustifs.\\
+           \hline
+           Reproductibilité totale & Le pipeline est parfaitement reproductible grace aux deux paradigmpes PaC, via le Jenkinsfile, et IaC, avec Docker et Ansible. \\
+           \hline
+           Sécurité et droits d’accès & Les plateformes sousjacentes au pipeline gèrent nativement la sécurité et les droits d'accès.\\
+           \hline
+           Tolérance aux pannes & Le pipeline a été conçu pour réaliser plusieurs tentatives d'exécution de certaines taches dans les cas d'indisponibilité d'un serveur ou d'une autre resource.\\
+          \hline
+        \end{tabularx}
+	\label{tab:exple}
+\end{table}
+\FloatBarrier
+\vspace{-5mm}
+\subsection{Test}
+\textbf{IFRS16 Pipelines}\\
+Nous avons mis en place trois pipeline IFRS16 avec des configurations différentes. Le tableau suivant présente le jeu de version de chaque pipeline. 
+\begin{table}[ht]
+	\centering
+	\caption{Tableau versionning des pipelines}
+	\footnotesize
+	\begin{tabularx}{\textwidth}{|p{4cm}|X|X|X|}
+          \hline & {\textbf{La procédure - IFRS 16}} & {\textbf{Repository}} & {\textbf{La plateforme - Shuttle}}  \\
+          \hline
+          IFRS16-Pipeline  & 2.8.x & 2.6.0 & 4.10.0 Build 30218\\
+          \hline
+          IFRS16-2.5-Pipeline & 2.7.x & 2.5.0 & 4.10.0 Build 30218 \\
+          \hline
+          Shuttle-latest-IFRS16-ref & 2.8.3 & 2.6.4 & 4.11 Latest - Nightly Build \\ 
+          \hline
+        \end{tabularx}
+	\label{tab:exple}
+\end{table}
+\FloatBarrier
+Indépendants, ces pipelines s'exécutent quotidennement pendant la nuit. En revanche, les utilisateurs peuvent les lancer manuellement. Le taux d'échecs des chaines CI/CD mises en place est très faible et ceci est lié à des erreurs dans le code, réseaux, ou d'infrastructure. 
+
+\section*{Conclusion}
+À travers ce chapitre nous avons pu présenté les phases de développement du projet IFRS16 CI/CD Pipelines; Spécification des besoins fonctionnels et non-fonctionnels à satisfaire, les choix technologiques et architecturaux, l'environnement de travail matériel et logiciel, les différents chaines mises en place et finalement une évaluation de la solution.
+
+
+
+
+
+%==============================================================================
+\end{spacing}

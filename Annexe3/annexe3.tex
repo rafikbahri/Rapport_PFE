@@ -1,0 +1,169 @@
+\setcounter{figure}{0} 
+\setcounter{table}{0}
+\setcounter{footnote}{0}
+\setcounter{equation}{0}
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\chaptermark}[1]{\markboth{\MakeUppercase{#1 }}{}}
+\renewcommand{\sectionmark}[1]{\markright{\thesection~ #1}}
+\fancyhead[RO]{\bfseries\rightmark}
+\fancyhead[LE]{\bfseries\leftmark}
+\fancyfoot[RO]{\thepage}
+\fancyfoot[LE]{\thepage}
+\renewcommand{\headrulewidth}{0.5pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\makeatletter
+\renewcommand\thefigure{C.\arabic{figure}}
+\renewcommand\thetable{C.\arabic{table}} 
+\makeatother
+
+\chapter{Annexe C : Solution Micro-k}
+\graphicspath{{Annexe3/figures/}}
+%==========================================================================
+
+%    Annexe
+
+%===========================================================================
+\begin{itemize}
+\item[C.1.] Une requête Micro-k validée est une requête HTTP qui sollicite un point d’entrée prédéfini dans une gille Shuttle configurée pour être exposée via l’API au niveau du serveur Shuttle en question.
+\item[C.2.] Les méthodologies agiles ont adopté l’approche fail-fast depuis longtemps. Cela signifie que les développeurs ont tendance à expérimenter librement en essayant d'atteindre les résultats souhaités, mais ils sont également prompts à abandonner les lignes de développement qui n'apportent pas les résultats souhaités. Cela permet de minimiser les risques pour les clients et les équipes de développement de logiciels, tout en garantissant un processus de livraison de logiciels plus prédictible. Cela augmente également les chances pour les clients d'obtenir ce qu'ils attendent, dans les limites du budget estimé et dans les délais.
+\item[C.3.] Advantages d’un API Gateway :
+    \begin{itemize}
+        \item Fournit une interface plus facile pour accéder à l’architecture.
+        \item Peut être utilisé pour empêcher l’exposition de la structure interne des micro-services aux clients.
+        \item Permet de restructurer les micro-services sans forcer les clients à modifier la logique de consommation.
+        \item Permet de centraliser les préoccupations transversales telles que la sécurité, la surveillance, la limitation des taux, etc.
+    \end{itemize}
+    Inconvénients d’un API Gateway :
+    \begin{itemize}
+        \item Il peut faire le sujet d’un point de défaillance unique (SPF) si des mesures appropriées de haute disponibilité ne sont pas prises.
+        \item La connaissance des différentes micro-services de l’API peut se retrouver dans l’API gateway.
+    \end{itemize}
+\item[C.4.] Gartner est le leader mondial de la recherche et du conseil. Ils équipent les chefs d’entreprise des connaissances, des conseils et des outils indispensables pour réaliser leurs priorités essentielles et bâtir les organisations prospères de demain.
+\end{itemize}
+\begin{figure}[!ht]\centering
+\includegraphics[scale=0.4]{"annexec1".png}
+\caption{Les cinq cas d'utilisation et 15 capacités critiques pour un outil de BI}
+\label{fig:fig1}
+\end{figure}
+\FloatBarrier
+\begin{itemize}
+\item[C.5.] 
+    \begin{itemize}
+        \item \textbf{Configuration agile de la BI centralisée} : Prendre en charge un flux de travail agile, allant des données à un contenu analytique fourni et géré de manière interne, en utilisant les capacités de gestion des données de la plate-forme.
+        \item \textbf{Analyse décentralisée } : Prend en charge un flux de travail allant des données aux analyses en libre-service. Intégrer des analyses pour les unités commerciales et les utilisateurs individuels.
+        \item \textbf{Découverte de données régie} : Prendre en charge un flux de travail allant des données aux analyses en libre-service, au contenu géré par des informaticiens, à la gouvernance, à la réutilisation et à la promotion du contenu généré par l'utilisateur.
+        \item \textbf{OEM ou BI intégrée} : Prendre en charge un flux de travail allant des données au contenu BI intégré dans un processus ou une application.
+        \item \textbf{Déploiement sur extranet} : Prendre en charge un flux de travail similaire à la configuration de la veille stratégique centralisée agile pour le client externe ou, dans le secteur public, l'accès des citoyens au contenu analytique.
+    \end{itemize}
+\end{itemize}
+
+\begin{table}[ht]
+	\centering
+	\caption{Tableau descriptif des cinq leadeurs de la BI }
+	\footnotesize
+	\begin{tabularx}{\textwidth}{|p{1.8cm}|X|X|X|X|X|}
+          \hline
+          & 
+          {\textbf{Vendeur}}
+          &
+          {\textbf{Fondé}}
+          &
+          {\textbf{Masse Clientèle}}
+          &
+          {\textbf{Droit de propriété}}
+          &
+          {\textbf{Modèle de déploiement}}
+          \\
+          \hline
+          Microsoft Power BI
+          &
+          Microsoft
+          &
+          1975
+          &
+          Inconnu
+          &
+          Public
+          &
+          On-premise, Cloud
+          \\
+          \hline
+          MicroStrategy
+          &
+          Microstrategy
+          &
+          1989
+          &
+          4,000+
+          &
+          Public
+          &
+          On-premise, Cloud
+          \\
+          \hline
+          Qlick Sence
+          &
+          1993
+          &
+          Qlik
+          &
+          45 000
+          &
+          Public
+          &
+          On-premise, Cloud
+          \\
+          \hline
+          Qlick View
+          &
+          1993
+          &
+          Qlik
+          &
+          45 000
+          &
+          Public
+          &
+          On-premise, Cloud
+          \\
+          \hline
+          Tableau
+          &
+          Tableau
+          &
+          2003
+          &
+          57,000+
+          &
+          Public
+          &
+          On-premise, Cloud
+          \\
+          \hline
+        \end{tabularx}
+	\label{tab:exple}
+\end{table}
+\FloatBarrier
+
+\begin{itemize}
+\item[C.6.] 
+    Le Scale Cube (parfois appelé "AKF Scale Cube" ou "AKF Cube") explique comment une mise à l'échelle infinie peut être obtenue en implémentant une approche tridimensionnelle, y compris la décomposition fonctionnelle et le sharding. Ce modèle est très utile pour créer des solutions à grande échelle et évolutives. L'utilisation du cube d'échelle avec une infrastructure cloud peut fournir des capacités de mise à l'échelle économiques sans sacrifier les qualités critiques du système. Il est composé de 3 axes :
+    \begin{itemize}
+        \item Duplication et clonage horizontaux (axe X)
+        \item Décomposition et segmentation fonctionnelles - Microservices (axe Y)
+        \item Partitionnement horizontal des données - Éclats (axe Z)
+    \end{itemize}
+\item[C.7.] ELK stack est conçue pour aider les utilisateurs à collecter les données de journal à partir de n'importe quel type de source et dans n'importe quel format, à rechercher, analyser et visualiser ces données en temps réel et créer des alertes sophistiquées. Logstash collecte et envoie les journaux dans la base de données Elasticsearch. Kibana prend ensuite les données et les visualise sous forme graphique.
+\item[C.8.] Le principe DRY (Don’t Repeat Yourself) est un principe de programmation visant à réduire la complexité des unités gérables. Il consiste à diviser un système en plusieurs parties. Dans le pragmatique "Programmer", DRY est défini comme "chaque élément de connaissance doit avoir une représentation unique, sans ambiguïté, faisant autorité dans un système".
+
+\end{itemize}
+
+\begin{figure}[!ht]\centering
+\includegraphics[scale=0.4]{"annexec2".png}
+\caption{Diagramme de séquence "Read Data Collection"}
+\label{fig:fig1}
+\end{figure}
+\FloatBarrier
+
